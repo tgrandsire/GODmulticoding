@@ -2,13 +2,7 @@ import java.util.*;
 import java.io.*;
 import java.math.*;
 
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
 class Player {
-    
-    //public static Board board;
 
     public static void main(String args[]) {
         Scanner in = new Scanner(System.in);
@@ -18,7 +12,10 @@ class Player {
         int nbrZonesInMap = in.nextInt(); // number of zones on the map (4 to 8) (Z)
         
         //initializing board with param number of player
+        GameHelper.setGameVars(nbrJoueur, nbrDronePerJoueur, nbrZonesInMap, ME_id);
         Board board = new Board(nbrJoueur, nbrDronePerJoueur, nbrZonesInMap, ME_id);
+        GameHelper.setBoard(board);
+        GameHelper.setDefaultDestination(new Coordinate(2000, 900));
         Joueur ME = board.getJoueur(ME_id);
         
         for (int zoneId = 0; zoneId < nbrZonesInMap; zoneId++) {
@@ -56,7 +53,7 @@ class Player {
             board.computeRiskPoints();
             board.computeNearestDroneFor(ME);
             
-            GameHelper.droneControlTour();
+            //GameHelper.droneControlTour();
             
             //ANSWER LOOP !!!
             for (int droneId = 0; droneId < nbrDronePerJoueur; droneId++) {
@@ -75,14 +72,49 @@ class Player {
     
     public static class GameHelper{
         private static Board board;
-        public static Coordinate DEFAULT_LOCATION = new Coordinate(2000, 900);
+        private static int nbrZones;
+        private static int nbrDrones;
+        private static int nbrJoueurs;
+        private static int ME_id;
+        private static Coordinate defaultDestination = new Coordinate(2000, 900);
         
         public static void setBoard(Board _board){
             board = _board;
         }
         
+        public static void setGameVars(int _nbrJoueurs, int _nbrDrones, int _nbrZones, int _ME_id){
+            nbrJoueurs = _nbrJoueurs;
+            nbrDrones = _nbrDrones;
+            nbrZones = _nbrZones;
+            ME_id = _ME_id;
+        }
+        
         public static Board getBoard(){
             return board;
+        }
+        
+        public static int getNbrJoueurs(){
+            return nbrJoueurs;
+        }
+        
+        public static int getNbrDrones(){
+            return nbrDrones;
+        }
+        
+        public static int getNbrZones(){
+            return nbrZones;
+        }
+        
+        public static int getMyOwnId(){
+            return ME_id;
+        }
+        
+        public static void setDefaultDestination(Coordinate coord){
+            defaultDestination = coord;
+        }
+        
+        public static Coordinate getDefaultDestination(){
+            return defaultDestination;
         }
         
         public static void droneControlTour(){
@@ -101,6 +133,7 @@ class Player {
                     int i = 0;
                     for (int riskPoint: zone.getRiskPoints()){
                         System.err.println("Risques pour joueur"+i+" :"+ riskPoint);
+                        i++;
                     }
                     System.err.println("Drones:");
                     for (Drone dedicatedDrone: zone.getAllocatedDrones()){
@@ -131,7 +164,6 @@ class Player {
             this.nbrZonesInMap = nbrZonesInMap;
             this.nbrDrone = nbrDrone;
             this.initJoueurs(nbrJoueur, nbrDrone);
-            GameHelper.setBoard(this);
         }
         
         public Board(int nbrJoueur, int nbrDrone, int nbrZonesInMap, int ME_id){
@@ -171,7 +203,7 @@ class Player {
         }
         
         public boolean zoneIsMine(Zone zone){
-            return (boolean) (zone.getOwner() == this.getJoueur(Board.ME_id) || !zone.hasOwner());
+            return (boolean) (zone.getOwner() == this.getJoueur(GameHelper.getMyOwnId()));
         }
         
         public void computeNearestDroneFor(Joueur joueur){
@@ -209,45 +241,35 @@ class Player {
             }
         }
         
-        //TODO
+        
         public void computeRiskPoints(){
-            for (int zoneId = 0; zoneId < this.nbrZonesInMap; zoneId++){
+            for (int zoneId = 0; zoneId < GameHelper.getNbrZones(); zoneId++){
                 Zone zone = this.getZone(zoneId);
                 Coordinate coordZone = zone.getCoordinates();
                 zone.clearRiskPoints();
-                // owner
+                
                 if(!zoneIsMine(zone)){
                     zone.addRiskPointForAll(1);
-                } else {
-                    //zone.addRiskPointForAll(-1);
                 }
-                for (int joueurId = 0; joueurId < this.joueurs.size(); joueurId++){
+                
+                for (int joueurId = 0; joueurId < GameHelper.getNbrJoueurs(); joueurId++){
                     Joueur joueur = this.getJoueur(joueurId);
-                    for (int droneId = 0; droneId < this.nbrDrone; droneId++){
+                    for (int droneId = 0; droneId < GameHelper.getNbrDrones(); droneId++){
                         
                         Drone drone = this.getJoueur(joueurId).getDrone(droneId);
                         Coordinate coordDrone = drone.getCoordinates();
                         
-                        //System.err.println(Coordinate.computeDistance(coordDrone, coordZone));
+                        
                         if (Coordinate.computeDistance(coordDrone, coordZone) < 100){
-                            if (joueurId == Board.ME_id){
-                                //System.err.println("ajout du allocatedDrone: " + zone.getallocatedDrones().size()); 
-                                
+                            if (joueurId == GameHelper.getMyOwnId()){
                                 zone.setRiskPoints(joueurId, zone.getDronesInZone().size());
-                                //System.err.println("control: " + zone.getRiskPoints(joueurId)); 
                             } else {
                                 zone.addRiskPoint(joueurId, 1);
                             }
                             
-                            
                         }
-                        
                     }
-                    //System.err.println("Zone " + zoneId + ": riskPoints for Player " + joueurId + ": " + zone.getRiskPoints(joueurId));
                 }
-                
-                
-                //System.err.println("Base " + zoneId + ": " + zone.getAllocatedDronestoString());
             }
         }
         
@@ -392,18 +414,19 @@ class Player {
         }
         
         public void setRiskPoints(int joueurId, int riskPoints){
-            this.riskPoints.add(joueurId, riskPoints);
+            this.riskPoints.set(joueurId, riskPoints);
         }
         
         public void addRiskPoint(int joueurId, int points){
-            int riskPoint = (int) this.riskPoints.get(joueurId);
+            int riskPoint = this.riskPoints.get(joueurId);
             riskPoint += points;
+            System.err.println("zone"+this.id+": ajout de "+points+"points au joueur"+joueurId+" qui en avait "+(riskPoint-points));
             this.setRiskPoints(joueurId, riskPoint);
         }
         
         public void addRiskPointForAll(int points){
-            for (int joueurId = 0; joueurId < Board.nbrJoueur; joueurId++){
-                if (joueurId != Board.ME_id){
+            for (int joueurId = 0; joueurId < GameHelper.getNbrJoueurs(); joueurId++){
+                if (joueurId != GameHelper.getMyOwnId()){
                     this.addRiskPoint(joueurId, points);
                 }
             }
@@ -418,7 +441,7 @@ class Player {
         
         public void clearRiskPoints(){
             this.riskPoints.clear();
-            for (int joueurId = 0; joueurId < 4; joueurId++){
+            for (int joueurId = 0; joueurId < GameHelper.getNbrJoueurs(); joueurId++){
                 this.riskPoints.add(joueurId, 0);
             }
         }
@@ -492,7 +515,7 @@ class Player {
         public void free(){
             this.allocated = false;
             this.allocatedZone = null;
-            this.destination = GameHelper.DEFAULT_LOCATION;
+            this.destination = GameHelper.getDefaultDestination();
         }
         
     }
@@ -582,6 +605,15 @@ class Player {
         }
         
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
