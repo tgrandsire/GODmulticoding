@@ -210,74 +210,31 @@ class Player {
             
             for (int zoneId = 0; zoneId < GameHelper.getNbrZones(); zoneId++){
                 Zone zone = this.getZone(zoneId);
-                //zone.clearAllocatedDrone();
                 
-                //System.err.println(zone.getRiskScore());
-                /*int difference = zone.getAllocatedDrones().size() - zone.getRiskScore();
-                System.err.println(difference);
+                //System.err.println("Zone"+zone.getId()+"("+zoneId+"): alloue "+zone.getAllocatedDrones().size()+" drones.");
+                //System.err.println("Pour un score de risque de "+zone.getRiskScore());
                 
-                for (int i = 0; i < difference; i++){
-                    Drone drone = (zone.getAllocatedDronesInZone().size() > 0)? zone.getAllocatedDronesInZone().get(0): null;
-                    if (drone != null)
-                        zone.freeDrone(drone);
-                    else
-                        break;
-                }
                 
-                for (int i = 0; i > difference; i++){
+                while (zone.getAllocatedDrones().size() < zone.getRiskScore()){
                     Drone drone = zone.getNearestFreeDrone();
-                    if (drone != null)
+                    if (drone != null){
                         zone.allocateDrone(drone);
-                    else
+                        System.err.println("Zone"+zone.getId()+"("+zoneId+"): alloue "+zone.getAllocatedDrones().size()+" drones.");
+                    } else
                         break;
-                }*/
-                //System.err.println("Zone"+zone.getId()+"("+zoneId+"): alloue "+zone.getAllocatedDrones().size()+" drones.");
-                //System.err.println("Pour un score de risque de "+zone.getRiskScore());
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                //System.err.println("Zone"+zone.getId()+"("+zoneId+"): alloue "+zone.getAllocatedDrones().size()+" drones.");
-                //System.err.println("Pour un score de risque de "+zone.getRiskScore());
-                
-                if (zone.getRiskScore() != 0){
-                
-                    while (zone.getAllocatedDrones().size() < zone.getRiskScore()){
-                        Drone drone = zone.getNearestFreeDrone();
-                        if (drone != null){
-                            zone.allocateDrone(drone);
-                            System.err.println("Zone"+zone.getId()+"("+zoneId+"): alloue "+zone.getAllocatedDrones().size()+" drones.");
-                        } else
-                            break;
-                    }
-                    
-                    while (zone.getAllocatedDrones().size() > zone.getRiskScore()){
-                        Drone drone = (zone.getAllocatedDronesInZone().size() > 0)? zone.getAllocatedDronesInZone().get(0): null;
-                        if (drone != null && zone.getOwner() == GameHelper.getBoard().getJoueur(GameHelper.getMyOwnId())){
-                            zone.freeDrone(drone);
-                            System.err.println("Zone"+zone.getId()+"("+zoneId+"): libère et alloue "+zone.getAllocatedDrones().size()+" drones.");
-                            
-                        } else
-                            break;
-                    }
-                    
-                } else {
-                    
                 }
                 
-                 /*else if (zone.getAllocatedDrones().size() == zone.getRiskScore()){
-                    Drone drone = zone.getNearestAllocatedDrone();
-                    if (drone != null)
-                        zone.allocateDrone(drone);
+                while (zone.getAllocatedDrones().size() > zone.getRiskScore()){
+                    Drone drone = (zone.getAllocatedDronesInZone().size() > 0)? zone.getAllocatedDronesInZone().get(0): null;
+                    if (drone != null && zone.getOwner() == GameHelper.getBoard().getJoueur(GameHelper.getMyOwnId())){
+                        zone.freeDrone(drone);
+                        System.err.println("Zone"+zone.getId()+"("+zoneId+"): libère et alloue "+zone.getAllocatedDrones().size()+" drones.");
+                        
+                    } else
+                        break;
                 }
-                int riskP = zone.getRiskScore();
-                int drones = zone.getAllocatedDrones().size();*/
-                //System.err.println("Base " + zoneId + ": " + riskP + "- drones " + drones );
+                    
+                
             }
         }
         
@@ -492,7 +449,8 @@ class Player {
                 if (joueurId != Board.ME_id)
                     maxRiskPoint = Math.max(maxRiskPoint, this.getRiskPoints(joueurId));
             }
-            return (int) (maxRiskPoint-safetyPoint);
+            //return (int) (maxRiskPoint-safetyPoint);
+            return (int) maxRiskPoint;
         }
         
     }
